@@ -145,17 +145,24 @@ class Analytics:
         """
         return self.df[self.df["country"].str.lower() == name.lower()]
 
-    def aggregate_country_data(self):
+    def aggregate_country_data(self, density_unit="people_per_km2"):
         """
-        Computes and returns aggregated data.
+        Computes and returns aggregated data for population density.
+
+        Parameters:
+        - density_unit (str): The unit in which population density should be expressed.
+          Possible values: "people_per_km2" (default), "people_per_mi2".
 
         Returns:
-        - dict: The aggregated data, including min, max, and average density.
+        - dict: The aggregated data, including min, max, and average population density.
         """
+        density_column = "density" if density_unit == "people_per_km2" else "densityMi"
+
         aggregated_data = {
-            "min_density": self.df["density"].min(),
-            "max_density": self.df["density"].max(),
-            "avg_density": self.df["density"].mean(),
+            "min_density": self.df[density_column].min(),
+            "max_density": self.df[density_column].max(),
+            "avg_density": self.df[density_column].mean(),
+            "density_unit": "people per square kilometer" if density_unit == "people_per_km2" else "people per square mile",
         }
         return aggregated_data
 
