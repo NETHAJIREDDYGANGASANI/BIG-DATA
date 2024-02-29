@@ -4,11 +4,28 @@ import json
 import matplotlib.pyplot as plt
 import pandas as pd
 
+class ImportData:
+    """
+    A class for importing, storing, and retrieving data from APIs and Redis.
 
+    Methods:
+    - load_api_data(url): Fetches data from the specified API URL.
+    - load_data_to_redis(data, redis_host=None, redis_port=None, redis_username=None, redis_password=None, redis_db=None): 
+      Stores the provided data in Redis.
+    - read_data_from_redis(redis_host=None, redis_port=None, redis_username=None, redis_password=None, redis_db=None): 
+      Retrieves data from Redis.
+    """
 
-class importData:
-    
-    def loadApiData(self, url):
+    def load_api_data(self, url):
+        """
+        Fetches data from the specified API URL.
+
+        Parameters:
+        - url (str): The URL of the API.
+
+        Returns:
+        - dict or None: The fetched data in JSON format or None if there is an error.
+        """
         try:
             response = requests.get(url)
             data = response.json() 
@@ -16,35 +33,45 @@ class importData:
         except Exception as e:
             print("Error fetching data:", e)
             return None
-        
-    def load_data_to_redis(self,data, redis_host=None, redis_port=None,redis_username = None,redis_password = None, redis_db=None):
-        try:
-            # Connect to Redis
-            r = redis.Redis(host=redis_host, port=redis_port,
-                            username=redis_username,password=redis_password,)
-            
 
-            # Convert the data to JSON string
+    def load_data_to_redis(self, data, redis_host=None, redis_port=None, redis_username=None, redis_password=None, redis_db=None):
+        """
+        Stores the provided data in Redis.
+
+        Parameters:
+        - data (dict): The data to be stored in Redis.
+        - redis_host (str): The Redis server host.
+        - redis_port (int): The Redis server port.
+        - redis_username (str): The Redis username (if applicable).
+        - redis_password (str): The Redis password.
+        - redis_db (str): The Redis database name.
+        """
+        try:
+            r = redis.Redis(host=redis_host, port=redis_port, username=redis_username, password=redis_password)
             json_data = json.dumps(data)
-            
-            # Store the JSON data in Redis
             r.set('data_key', json_data)
-            
             print("Data loaded into Redis successfully.")
         except Exception as e:
             print("Error loading data into Redis:", e)
-            
 
-    
     def read_data_from_redis(self, redis_host=None, redis_port=None, redis_username=None, redis_password=None, redis_db=None):
+        """
+        Retrieves data from Redis.
+
+        Parameters:
+        - redis_host (str): The Redis server host.
+        - redis_port (int): The Redis server port.
+        - redis_username (str): The Redis username (if applicable).
+        - redis_password (str): The Redis password.
+        - redis_db (str): The Redis database name.
+
+        Returns:
+        - dict or None: The retrieved data from Redis in JSON format or None if there is an error.
+        """
         try:
-            # Connect to Redis
             r = redis.Redis(host=redis_host, port=redis_port, username=redis_username, password=redis_password)
-            
-            # Retrieve data from Redis
             json_data = r.get('data_key')
             
-            # Decode JSON data
             if json_data:
                 data = json.loads(json_data)
                 return data
@@ -56,13 +83,40 @@ class importData:
             return None
 
 class Analytics:
+    """
+    A class for performing analytics on data stored in a DataFrame.
+
+    Methods:
+    - __init__(self, data): Initializes an instance of the class with data.
+    - plot_population_growth(self, country_name): Plots population growth for a specified country.
+    - search_country_by_name(self, name): Searches for a country by name.
+    - aggregate_country_data(self): Computes and returns aggregated data.
+
+    Attributes:
+    - data (dict): The input data.
+    - df (pd.DataFrame): The DataFrame created from the input data.
+    """
+
     def __init__(self, data):
+        """
+        Initializes an instance of the class with data.
+
+        Parameters:
+        - data (dict): The input data.
+        """
         self.data = data
         self.df = pd.DataFrame(data)
 
+    def plot_population_growth(self, country_name):
+        """
+        Plots population growth for a specified country.
 
-    # Function for plotting a graph
-    def plot_population_growth(self,country_name):
+        Parameters:
+        - country_name (str): The name of the country.
+
+        Returns:
+        - None
+        """
         country_data = self.df[self.df["country"].str.lower() == country_name.lower()]
 
         if country_data.empty:
@@ -79,58 +133,51 @@ class Analytics:
         plt.grid(True)
         plt.show()
 
-    # Function for searching a country
-    def search_country_by_name(self,name):
+    def search_country_by_name(self, name):
+        """
+        Searches for a country by name.
+
+        Parameters:
+        - name (str): The name of the country.
+
+        Returns:
+        - pd.DataFrame: The DataFrame containing the search result.
+        """
         return self.df[self.df["country"].str.lower() == name.lower()]
 
-    # Function for aggregation (min, max, average)
     def aggregate_country_data(self):
+        """
+        Computes and returns aggregated data.
+
+        Returns:
+        - dict: The aggregated data, including min, max, and average density.
+        """
         aggregated_data = {
             "min_density": self.df["density"].min(),
             "max_density": self.df["density"].max(),
             "avg_density": self.df["density"].mean(),
-            # Add more aggregations as needed
         }
         return aggregated_data
 
-
-
-
 if __name__ == "__main__":
-    dl = importData()
+    dl = ImportData()
     url = "https://apis-ugha.onrender.com/countries"
-    data = dl.loadApiData(url)
+    data = dl.load_api_data(url)
     
-    print("extracted data successfully")
-    # Load data into Redis
+    print("Extracted data successfully")
+    
     redis_host = 'redis-16403.c326.us-east-1-3.ec2.cloud.redislabs.com'
-    redis_port = 16403  # Your Redis Cloud port
-    redis_password = 'Bigdata007'  # Your Redis Cloud password
+    redis_port = 16403
+    redis_password = 'Bigdata007'
     redis_db = 'Bigdata'
     username = 'default'
-    dl.load_data_to_redis(data,redis_host=redis_host,
-                          redis_port=redis_port,
-                          redis_username=username,
-                          redis_password=redis_password,
-                          redis_db=redis_db)
-    
+    dl.load_data_to_redis(data, redis_host=redis_host, redis_port=redis_port, redis_username=username, redis_password=redis_password, redis_db=redis_db)
 
-    #print(data)
-
-
-    # Read data from Redis
-    redis_data = dl.read_data_from_redis(redis_host=redis_host,
-                                         redis_port=redis_port,
-                                         redis_username=username,
-                                         redis_password=redis_password,
-                                         redis_db=redis_db)
+    redis_data = dl.read_data_from_redis(redis_host=redis_host, redis_port=redis_port, redis_username=username, redis_password=redis_password, redis_db=redis_db)
 
     if redis_data:
-        #print("Data read from Redis:", redis_data)
-        # Initialize Analytics object with the retrieved data
         analytics = Analytics(redis_data)
 
-        # Example usage
         analytics.plot_population_growth("India")
 
         search_result = analytics.search_country_by_name("China")
