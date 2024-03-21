@@ -3,6 +3,10 @@ import redis
 import json
 import matplotlib.pyplot as plt
 import pandas as pd
+from dotenv import load_dotenv
+import os
+# Call load_dotenv to load environment variables from .env file
+load_dotenv()
 
 class ImportData:
     """
@@ -175,7 +179,7 @@ if __name__ == "__main__":
     
     redis_host = 'redis-16403.c326.us-east-1-3.ec2.cloud.redislabs.com'
     redis_port = 16403
-    redis_password = 'Bigdata007'
+    redis_password = os.getenv('REDIS_PASSWORD')
     redis_db = 'Bigdata'
     username = 'default'
     dl.load_data_to_redis(data, redis_host=redis_host, redis_port=redis_port, redis_username=username, redis_password=redis_password, redis_db=redis_db)
